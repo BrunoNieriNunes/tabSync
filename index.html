@@ -6,6 +6,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
     <script src="https://unpkg.com/wavesurfer.js"></script>
     <script src="https://kit.fontawesome.com/4a47e623a7.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/regions.min.js"></script>
     <style type="text/css">
       body {
         font-family: Arial, Helvetica, sans-serif;
@@ -252,7 +253,7 @@
     <video id="theVideo" width="720" controls>
     </video>
 
-    <div class="audio-wrap" style="display: none;">
+    <div class="audio-wrap">
       <div id="audiowave"></div>
       <div class="audio-controls">
         <button onclick="audioPlayPause()" class="btn-audio-play-pause">
@@ -268,8 +269,13 @@
     </div>
 
     <div>
-      <button onclick="showTime()" type="button">Botão</button>
-      <ul id="myList"></ul>
+      <button onclick="showTime()" type="button">Adicionar compasso</button>
+      <button onclick="editTime()" type="button">Editar compasso</button>
+      <button onclick="deleteTime()" type="button">Deletar compasso</button>
+      <button onclick="insertTime()" type="button">Inserir compasso</button>
+      <input id="indexCmp" type="number">
+      <input id="timeCmp" type="number">
+      <ol id="myList"></ol>
     </div>
 
     <div class="at-wrap">
@@ -375,13 +381,43 @@
         var video = document.getElementById("theVideo");
         video.src = media;
         video.style.display = "block";
+        waveSurfer.load(media);
       });
 
       function showTime(){
         console.log(myVideo.currentTime * 1000);
         compasses.push(myVideo.currentTime * 1000);
         updateArray();
-        return;
+      };
+
+      function editTime(){
+        var list = document.getElementById("myList");
+        var index = document.getElementById("indexCmp").value;
+        var newTime = document.getElementById("timeCmp").value;
+        if(index <= list.children.length){
+          list.children[index - 1].innerText = newTime;
+          compasses[index - 1] = newTime;
+        }
+      };
+
+      function deleteTime(){
+        var list = document.getElementById("myList");
+        var index = document.getElementById("indexCmp").value;
+        var newTime = document.getElementById("timeCmp").value;
+        if(index <= list.children.length){
+          compasses.splice(index - 1, 1);
+          updateArray();
+        }
+      };
+
+      function insertTime(){
+        var list = document.getElementById("myList");
+        var index = document.getElementById("indexCmp").value;
+        var newTime = document.getElementById("timeCmp").value;
+        if(index <= list.children.length){
+          compasses.splice(index - 1, 0, newTime);
+          updateArray();
+        }
       }
 
       var waveSurfer = WaveSurfer.create({
@@ -393,8 +429,8 @@
         width: 720
       });
 
-      waveSurfer.load("file_example_MP3_5MG.mp3");
       waveSurfer.setMuted(true);
+      const wsRegions = waveSurfer.registerPlugin(WaveSurfer.Regions.create());
 
       let myVideo = document.getElementById("theVideo");
 
