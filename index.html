@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <title>AlphaTab Tutorial</title>
+    <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
+    <script src="https://unpkg.com/wavesurfer.js"></script>
+    <script src="https://kit.fontawesome.com/4a47e623a7.js" crossorigin="anonymous"></script>
+    <style type="text/css">
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 12px;
+      }
+
+      .at-wrap {
+        width: 80vw;
+        height: 80vh;
+        margin: 0 auto;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .at-content {
+        position: relative;
+        overflow: hidden;
+        flex: 1 1 auto;
+      }
+
+      /** Sidebar **/
+      .at-sidebar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        max-width: 70px;
+        width: auto;
+        display: flex;
+        align-content: stretch;
+        z-index: 1001;
+        overflow: hidden;
+        border-right: 1px solid rgba(0, 0, 0, 0.12);
+        background: #f7f7f7;
+      }
+
+      .at-sidebar:hover {
+        max-width: 400px;
+        transition: max-width 0.2s;
+        overflow-y: auto;
+      }
+
+      .at-viewport {
+        overflow-y: auto;
+        position: absolute;
+        top: 0;
+        left: 70px;
+        right: 0;
+        bottom: 0;
+        padding-right: 20px;
+      }
+
+      .at-footer {
+        flex: 0 0 auto;
+        background: #436d9d;
+        color: #fff;
+      }
+
+      /** Overlay **/
+
+      .at-overlay {
+        /** Fill Parent */
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1002;
+
+        /* Blurry dark shade */
+        backdrop-filter: blur(3px);
+        background: rgba(0, 0, 0, 0.5);
+
+        /** center content */
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .at-overlay-content {
+        /* white box with drop-shadow */
+        margin-top: 20px;
+        background: #fff;
+        box-shadow: 0px 5px 10px 0px rgba(0, 0, 0, 0.3);
+        padding: 10px;
+      }
+
+      /** Track selector **/
+      .at-track {
+        display: flex;
+        position: relative;
+        padding: 5px;
+        transition: background 0.2s;
+        cursor: pointer;
+      }
+
+      .at-track:hover {
+        background: rgba(0, 0, 0, 0.1);
+      }
+
+      .at-track > .at-track-icon,
+      .at-track > .at-track-details {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .at-track > .at-track-icon {
+        flex-shrink: 0;
+        font-size: 32px;
+        opacity: 0.5;
+        transition: opacity 0.2s;
+        width: 64px;
+        height: 64px;
+        margin-right: 5px;
+        align-items: center;
+      }
+
+      .at-track-name {
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .at-track:hover > .at-track-icon {
+        opacity: 0.8;
+      }
+
+      .at-track.active {
+        background: rgba(0, 0, 0, 0.03);
+      }
+
+      .at-track.active > .at-track-icon {
+        color: #4972a1;
+        opacity: 1;
+      }
+
+      .at-track > .at-track-name {
+        font-weight: 500;
+      }
+
+      /** Footer **/
+      .at-controls {
+        flex: 0 0 auto;
+        display: flex;
+        justify-content: space-between;
+        background: #436d9d;
+        color: #fff;
+      }
+
+      .at-controls > div {
+        display: flex;
+        justify-content: flex-start;
+        align-content: center;
+        align-items: center;
+      }
+
+      .at-controls > div > * {
+        display: flex;
+        text-align: center;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 4px;
+        margin: 0 3px;
+      }
+
+      .at-controls .btn {
+        color: #fff;
+        border-radius: 0;
+        height: 40px;
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+      }
+      .at-controls .btn.disabled {
+        cursor: progress;
+        opacity: 0.5;
+      }
+
+      .at-controls a.active {
+        background: #5588c7;
+        text-decoration: none;
+      }
+
+      .at-controls .btn i {
+        vertical-align: top;
+      }
+
+      .at-controls select {
+        -moz-appearance: none;
+        -webkit-appearance: none;
+        appearance: none;
+        border: none;
+        width: 100%;
+        height: 40px;
+        background: #436d9d;
+        padding: 4px 10px;
+        color: #fff;
+        font-size: 16px;
+        text-align-last: center;
+        text-align: center;
+        -ms-text-align-last: center;
+        -moz-text-align-last: center;
+        cursor: pointer;
+      }
+
+      .at-song-title {
+        font-weight: bold;
+      }
+
+      .at-cursor-bar {
+        /* Defines the color of the bar background when a bar is played */
+        background: rgba(255, 242, 0, 0.25);
+      }
+
+      .at-selection div {
+        /* Defines the color of the selection background */
+        background: rgba(64, 64, 255, 0.1);
+      }
+
+      .at-cursor-beat {
+        /* Defines the beat cursor */
+        background: rgba(64, 64, 255, 0.75);
+        width: 3px;
+      }
+
+      .at-highlight * {
+        /* Defines the color of the music symbols when they are being played (svg) */
+        fill: #0078ff;
+        stroke: #0078ff;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div>
+      <input type="file" id="input" name="input_video" accept="video/mp4, video/mov">
+    </div>
+
+    <video id="theVideo" width="720" controls>
+    </video>
+
+    <div class="audio-wrap" style="display: none;">
+      <div id="audiowave"></div>
+      <div class="audio-controls">
+        <button onclick="audioPlayPause()" class="btn-audio-play-pause">
+          <i class="fa-solid fa-play"></i><i class="fa-solid fa-pause"></i>
+        </button>
+        <button onclick="zoomIn()" class="btn-zoom-in">
+          <i class="fa-solid fa-magnifying-glass-plus"></i>
+        </button>
+        <button onclick="zoomOut()" class="btn-zoom-out">
+          <i class="fa-solid fa-magnifying-glass-minus"></i>
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <button onclick="showTime()" type="button">Botão</button>
+      <ul id="myList"></ul>
+    </div>
+
+    <div class="at-wrap">
+      <div class="at-overlay">
+        <div class="at-overlay-content">
+          Music sheet is loading
+        </div>
+      </div>
+      <div class="at-content">
+        <div class="at-sidebar">
+          <div class="at-sidebar-content">
+            <div class="at-track-list"></div>
+          </div>
+        </div>
+        <div class="at-viewport">
+          <div class="at-main"></div>
+        </div>
+      </div>
+      <div class="at-controls">
+        <div class="at-controls-left">
+          <a class="btn at-player-stop disabled">
+            <i class="fa-solid fa-backward-step"></i>
+          </a>
+          <a class="btn at-player-play-pause disabled">
+            <i class="fa-solid fa-play"></i>
+          </a>
+          <span class="at-player-progress">0%</span>
+          <div class="at-song-info">
+            <span class="at-song-title"></span> -
+            <span class="at-song-artist"></span>
+          </div>
+          <div class="at-song-position">00:00 / 00:00</div>
+        </div>
+        <div class="at-controls-right">
+          <a class="btn toggle at-count-in">
+            <i class="fa-solid fa-star"></i>
+          </a>        
+          <a class="btn at-metronome">
+            <i class="fa-solid fa-hourglass"></i>
+          </a>
+          <a class="btn at-loop">
+            <i class="fa-solid fa-rotate-left"></i>
+          </a>
+          <a class="btn at-print">
+            <i class="fa-solid fa-print"></i>
+          </a>
+          <div class="at-zoom">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <select>
+              <option value="25">25%</option>
+              <option value="50">50%</option>
+              <option value="75">75%</option>
+              <option value="90">90%</option>
+              <option value="100" selected>100%</option>
+              <option value="110">110%</option>
+              <option value="125">125%</option>
+              <option value="150">150%</option>
+              <option value="200">200%</option>
+            </select>
+          </div>
+
+          <div class="at-pbs">
+            <i class="fa-solid fa-gauge"></i>
+            <select>
+              <option value="25">25%</option>
+              <option value="50">50%</option>
+              <option value="60">60%</option>
+              <option value="70">70%</option>
+              <option value="75">75%</option>
+              <option value="80">80%</option>
+              <option value="90">90%</option>
+              <option value="100" selected>100%</option>
+              <option value="150">150%</option>
+              <option value="200">200%</option>
+            </select>
+          </div>
+
+          <div class="at-layout">
+            <select>
+              <option value="horizontal">Horizontal</option>
+              <option value="page" selected>Page</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <template id="at-track-template">
+      <div class="at-track">
+        <div class="at-track-icon">
+          <i class="fa-solid fa-guitar"></i>
+        </div>
+        <div class="at-track-details">
+          <div class="at-track-name"></div>
+        </div>
+      </div>
+    </template>
+
+    <script type="text/javascript">
+
+      document.getElementById("input").addEventListener("change", (e) => {
+        var media = URL.createObjectURL(e.target.files[0]);
+        var video = document.getElementById("theVideo");
+        video.src = media;
+        video.style.display = "block";
+      });
+
+      function showTime(){
+        console.log(myVideo.currentTime * 1000);
+        compasses.push(myVideo.currentTime * 1000);
+        updateArray();
+        return;
+      }
+
+      var waveSurfer = WaveSurfer.create({
+        container: "#audiowave",
+        waveColor: "#5df9de",
+        height: 240,
+        interact: false,
+        cursorColor: "blue",
+        width: 720
+      });
+
+      waveSurfer.load("file_example_MP3_5MG.mp3");
+      waveSurfer.setMuted(true);
+
+      let myVideo = document.getElementById("theVideo");
+
+      var theInterval;
+      var pauseStamps = new Array();
+      //var compasses = new Array(42000, 48000, 53000, 58000, 65000, 70000, 76000, 80000, 85000, 90000);
+      var compasses = new Array();
+      var videoToTab = new Array(compasses.length);
+      var videoStart = compasses[0] | 0;
+      var rememberTime = 0;
+
+      myVideo.addEventListener("play", () => {
+        api.tickPosition = rememberTime;
+        api.updateCursors();
+        api.cursorUpdateTick();
+        api.updateSelectionCursor();
+        api.playbackSpeed = findPlaybackSpeed(myVideo, compasses, expectedDuration) * pbsSpeed;
+        theInterval = setInterval(() => {
+          if(!pauseStamps.includes(findVideoStamp())){
+            api.play();
+          }
+        }, 100);
+      });
+
+      myVideo.addEventListener("pause", () => {
+        clearInterval(theInterval);
+        rememberTime = api.tickPosition;
+        api.pause();
+      });
+
+      
+      myVideo.addEventListener("seeked", () => {
+        api.playbackSpeed = 1;
+        var i = 0;
+        var found = false;
+        while(!found && i < compasses.length){
+          if(compasses[i] >= myVideo.currentTime * 1000){
+            found = true;
+            break;
+          }
+          i++;
+        }
+        if(found){
+          console.log("index: " + i);
+          api.tickPosition = tickStamps[i - 1] | 0;
+          api.timePosition = expectedStamps[i - 1] | 0;
+          console.log("tickposition: " + (tickStamps[i - 1] | 0));
+          if(i !== 0){
+            api.timePosition += (myVideo.currentTime * 1000 - (compasses[i - 1] | 0));
+            console.log("timeadded: " + (myVideo.currentTime * 1000 - (compasses[i - 1] | 0)));
+          }
+        }
+        while(!found && i < expectedStamps.length){
+          console.log("Atumalaca");
+          if(expectedStamps[i] >= myVideo.currentTime * 1000){
+            found = true;
+            api.tickPosition = tickStamps[i - 1] | 0;
+            api.timePosition += (myVideo.currentTime * 1000 - (expectedStamps[i]));
+            break;
+          }
+          i++;
+        }
+        rememberTime = api.tickPosition;
+      });
+
+      function findPlaybackSpeed(videoFile, arrayVideo, arrayTab){
+        for(var i = 0; i < arrayTab.length; i++){
+          if(arrayVideo.length >= i){
+            if(arrayVideo[i] >= videoFile.currentTime * 1000){
+              if(i === 0)
+                return 1;
+              return (arrayTab[i - 1] / getInterval(arrayVideo, i));
+            }
+          }
+        }
+        return 1;
+      }
+
+      function findVideoStamp(){
+        for(var i = 0; i < compasses.length; i++){
+          if(compasses[i] >= myVideo.currentTime * 1000)
+            return i;
+        }
+        for(var i = compasses.length; i < expectedStamps.length; i++){
+          if(expectedStamps[i] >= myVideo.currentTime * 1000)
+            return i;
+        }
+        return -1;
+      }
+
+      function getInterval(arrayVideo, index){
+        if(index === 0)
+          return 0;
+        return arrayVideo[index] - arrayVideo[index - 1];
+      }
+
+      // load elements
+      const wrapper = document.querySelector(".at-wrap");
+      const main = wrapper.querySelector(".at-main");
+
+      // initialize alphatab
+      var settings = {
+        file: "André Nieri - The Outfield - Your Love[corrigido].gp",
+        player: {
+          enablePlayer: true,
+          soundFont: "https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/soundfont/sonivox.sf2",
+          scrollElement: wrapper.querySelector('.at-viewport')
+        },
+      };
+      var api = new alphaTab.AlphaTabApi(main, settings);
+
+      var nextBeatWillChangeTheMasterBar = false;
+
+      api.playedBeatChanged.on((args) => {
+        if(nextBeatWillChangeTheMasterBar && compasses.length > api._currentBeat.currentBeatLookup.masterBar.masterBar.index){
+          api.timePosition += calculateMissedTime();
+          console.log("changed the time by: " + calculateMissedTime());
+        }
+        if(api._currentBeat.currentBeatLookup.masterBar.masterBar.index !== api._currentBeat.nextBeatLookup.masterBar.masterBar.index){
+          nextBeatWillChangeTheMasterBar = true;
+        }
+        else{
+          nextBeatWillChangeTheMasterBar = false;
+        }
+        api.playbackSpeed = findPlaybackSpeed(myVideo, compasses, expectedDuration) * pbsSpeed;
+        console.log(api.playbackSpeed);
+      });
+
+      function calculateMissedTime(){
+        return myVideo.currentTime * 1000 - compasses[api._currentBeat.currentBeatLookup.masterBar.masterBar.index];
+      }
+
+      // overlay logic
+      const overlay = wrapper.querySelector(".at-overlay");
+      api.renderStarted.on(() => {
+        overlay.style.display = "flex";
+      });
+      api.renderFinished.on(() => {
+        overlay.style.display = "none";
+      });
+
+      api.postRenderFinished.on(() => {
+        api.changeTrackVolume(api.score.tracks, 0);
+        if(typeof stm !== undefined){
+          expectedDuration = new Array(api.tracks[0].staves[0].bars.length);
+          expectedStamps = new Array(api.tracks[0].staves[0].bars.length + 1);
+          tickStamps = new Array(api.tickCache.masterBars.length);
+          for(var i = 0; i < api.tickCache.masterBars.length; i++){
+            tickStamps[i] = api.tickCache.masterBars[i].start;
+          }
+          for(var i = 0; i < expectedDuration.length; i++){
+            expectedDuration[i] = 0;
+          }
+          for(var i = 0; i < expectedStamps.length; i++){
+            expectedStamps[i] = 0;
+          }
+          var seekingBeat = api.tickCache.findBeat(api.tracks, 0);
+          while(seekingBeat != null){
+            var currentIndex = seekingBeat.currentBeatLookup.masterBar.masterBar.index;
+            expectedDuration[currentIndex] += seekingBeat.duration;
+            seekingBeat = api.tickCache.findBeat(api.tracks, seekingBeat.currentBeatLookup.end);
+          }
+          for(var i = 0; i < expectedDuration.length; i++){
+            expectedStamps[i + 1] = expectedDuration[i];
+            expectedStamps[i + 1] += expectedStamps[i];
+          }
+        }
+      });
+
+      // track selector
+      function createTrackItem(track) {
+        const trackItem = document.querySelector("#at-track-template").content.cloneNode(true).firstElementChild;
+        trackItem.querySelector(".at-track-name").innerText = track.name;
+        trackItem.track = track;
+        trackItem.onclick = (e) => {
+          e.stopPropagation();
+          api.renderTracks([track]);
+        };
+        return trackItem;
+      }
+      const trackList = wrapper.querySelector(".at-track-list");
+      api.scoreLoaded.on((score) => {
+        // clear items
+        trackList.innerHTML = "";
+        // generate a track item for all tracks of the score
+        score.tracks.forEach((track) => {
+          trackList.appendChild(createTrackItem(track));
+        });
+      });
+      api.renderStarted.on(() => {
+        // collect tracks being rendered
+        const tracks = new Map();
+        api.tracks.forEach((t) => {
+          tracks.set(t.index, t);
+        });
+        // mark the item as active or not
+        const trackItems = trackList.querySelectorAll(".at-track");
+        trackItems.forEach((trackItem) => {
+          if (tracks.has(trackItem.track.index)) {
+            trackItem.classList.add("active");
+          } else {
+            trackItem.classList.remove("active");
+          }
+        });
+      });
+
+      /** Controls **/
+      api.scoreLoaded.on((score) => {
+        wrapper.querySelector(".at-song-title").innerText = score.title;
+        wrapper.querySelector(".at-song-artist").innerText = score.artist;
+      });
+
+      const countIn = wrapper.querySelector('.at-controls .at-count-in');
+      countIn.onclick = () => {
+        countIn.classList.toggle('active');
+        if (countIn.classList.contains('active')) {
+          api.countInVolume = 1;
+        } else {
+          api.countInVolume = 0;
+        }
+      };
+      
+      const metronome = wrapper.querySelector(".at-controls .at-metronome");
+      metronome.onclick = () => {
+        metronome.classList.toggle("active");
+        if (metronome.classList.contains("active")) {
+          api.metronomeVolume = 1;
+        } else {
+          api.metronomeVolume = 0;
+        }
+      };
+
+      const loop = wrapper.querySelector(".at-controls .at-loop");
+      loop.onclick = () => {
+        loop.classList.toggle("active");
+        api.isLooping = loop.classList.contains("active");
+      };
+
+      wrapper.querySelector(".at-controls .at-print").onclick = () => {
+        api.print();
+      };
+
+      const zoom = wrapper.querySelector(".at-controls .at-zoom select");
+      zoom.onchange = () => {
+        const zoomLevel = parseInt(zoom.value) / 100;
+        api.settings.display.scale = zoomLevel;
+        api.updateSettings();
+        api.render();
+      };
+
+      var pbsSpeed = 1;
+
+      const pbs = wrapper.querySelector(".at-controls .at-pbs select");
+      pbs.onchange = () => {
+        pbsSpeed = parseInt(pbs.value) / 100;
+        myVideo.playbackRate = pbsSpeed;
+        api.updateSettings();
+      }
+
+      var ogZoom;
+      var zoomFactor = 0;
+
+      function zoomIn(){
+        ogZoom = 720 / waveSurfer.getDuration();
+        if (zoomFactor == 0)
+          zoomFactor = ogZoom;
+        if(zoomFactor >= 1024)
+          return;
+        zoomFactor *= 2;
+        waveSurfer.zoom(zoomFactor);
+      }
+
+      function zoomOut(){
+        ogZoom = 720 / waveSurfer.getDuration();
+        if (zoomFactor == 0)
+          zoomFactor = ogZoom;
+        if(zoomFactor <= ogZoom)
+          return;
+        zoomFactor /= 2;
+        waveSurfer.zoom(zoomFactor);
+      }
+
+      function audioPlayPause(){
+        waveSurfer.playPause();
+      }
+
+      const layout = wrapper.querySelector(".at-controls .at-layout select");
+      layout.onchange = () => {
+        switch (layout.value) {
+          case "horizontal":
+            api.settings.display.layoutMode = alphaTab.LayoutMode.Horizontal;
+            break;
+          case "page":
+            api.settings.display.layoutMode = alphaTab.LayoutMode.Page;
+            break;
+        }
+        api.updateSettings();
+        api.render();
+      };
+
+      // player loading indicator
+      const playerIndicator = wrapper.querySelector(
+        ".at-controls .at-player-progress"
+      );
+      api.soundFontLoad.on((e) => {
+        const percentage = Math.floor((e.loaded / e.total) * 100);
+        playerIndicator.innerText = percentage + "%";
+      });
+      api.playerReady.on(() => {
+        playerIndicator.style.display = "none";
+      });
+
+      // main player controls
+      const playPause = wrapper.querySelector(
+        ".at-controls .at-player-play-pause"
+      );
+      const stop = wrapper.querySelector(".at-controls .at-player-stop");
+      playPause.onclick = (e) => {
+        if (e.target.classList.contains("disabled")) {
+          return;
+        }
+        api.playPause();
+      };
+      stop.onclick = (e) => {
+        if (e.target.classList.contains("disabled")) {
+          return;
+        }
+        api.stop();
+      };
+      api.playerReady.on(() => {
+        playPause.classList.remove("disabled");
+        stop.classList.remove("disabled");
+      });
+      api.playerStateChanged.on((e) => {
+        const icon = playPause.querySelector("i.fas");
+      });
+
+      // song position
+      function formatDuration(milliseconds) {
+        let seconds = milliseconds / 1000;
+        const minutes = (seconds / 60) | 0;
+        seconds = (seconds - minutes * 60) | 0;
+        return (
+          String(minutes).padStart(2, "0") +
+          ":" +
+          String(seconds).padStart(2, "0")
+        );
+      }
+
+      const songPosition = wrapper.querySelector(".at-song-position");
+      let previousTime = -1;
+      api.playerPositionChanged.on((e) => {
+        // reduce number of UI updates to second changes.
+        const currentSeconds = (e.currentTime / 1000) | 0;
+        if (currentSeconds == previousTime) {
+          return;
+        }
+
+        songPosition.innerText =
+          formatDuration(e.currentTime) + " / " + formatDuration(e.endTime);
+      });
+
+      var expectedDuration;
+      var expectedStamps;
+      var tickStamps;
+
+      updateArray();
+
+      function updateArray(){
+        let list = document.getElementById("myList");
+        while(list.hasChildNodes())
+          list.removeChild(list.children[0]);
+        for(var i = 0; i < compasses.length; ++i) {
+            let li = document.createElement('li');
+            li.innerText = compasses[i];
+            list.appendChild(li);
+        }
+      }
+
+/*
+      api.postRenderFinished.on(() => {
+          var barack = 0;
+          var beat = api._currentBeat;
+          while(beat != null){
+            barack += api._currentBeat.duration;
+            beat = beat.nextBeat;
+            api.tickPositon = api._currentBeat.nextBeatLookup.start;
+            console.log(barack + "");
+          }
+      });
+*/
+
+
+/*
+      static ticksToMillis(ticks, tempo) {
+            return (ticks * (60000.0 / (tempo * MidiUtils.QuarterTime))) | 0;
+        }
+        /**
+         * Converts the given midi tick duration into milliseconds.
+         * @param millis The duration in milliseconds
+         * @param tempo The current tempo in BPM.
+         * @returns The converted duration in midi ticks.
+         *
+         static millisToTicks(millis, tempo) {
+            return (millis / (60000.0 / (tempo * MidiUtils.QuarterTime))) | 0;
+        }
+*/
+
+        function beatTime(beat){
+          return getTime(beat.end - beat.start, beat.masterBar.tempo);
+        }
+
+
+        function getTime(ticks, tempo){
+          return (ticks * (60000.0 / (tempo * 960))) | 0;
+        }
+
+
+    </script>
+  </body>
+</html>
