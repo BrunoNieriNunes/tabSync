@@ -269,7 +269,7 @@
     </div>
 
     <div>
-      <button onclick="showTime()" type="button">Adicionar compasso</button>
+      <button onclick="addTime()" type="button">Adicionar compasso</button>
       <button onclick="editTime()" type="button">Editar compasso</button>
       <button onclick="deleteTime()" type="button">Deletar compasso</button>
       <button onclick="insertTime()" type="button">Inserir compasso</button>
@@ -384,9 +384,13 @@
         waveSurfer.load(media);
       });
 
-      function showTime(){
-        console.log(myVideo.currentTime * 1000);
+      function addTime(){
         compasses.push(myVideo.currentTime * 1000);
+        wsRegions.addRegion({
+          start: myVideo.currentTime,
+          color: 'red',
+          content: "" + compasses.length
+        });
         updateArray();
       };
 
@@ -394,9 +398,10 @@
         var list = document.getElementById("myList");
         var index = document.getElementById("indexCmp").value;
         var newTime = document.getElementById("timeCmp").value;
-        if(index <= list.children.length){
-          list.children[index - 1].innerText = newTime;
+        if(index <= list.children.length){;
+          wsRegions.getRegions()[index - 1].setOptions({start: newTime / 1000});
           compasses[index - 1] = newTime;
+          updateArray();
         }
       };
 
@@ -405,6 +410,7 @@
         var index = document.getElementById("indexCmp").value;
         var newTime = document.getElementById("timeCmp").value;
         if(index <= list.children.length){
+          wsRegions.getRegions()[index - 1].remove();
           compasses.splice(index - 1, 1);
           updateArray();
         }
@@ -415,10 +421,26 @@
         var index = document.getElementById("indexCmp").value;
         var newTime = document.getElementById("timeCmp").value;
         if(index <= list.children.length){
+          wsRegions.addRegion({
+            start: newTime / 1000,
+            color: 'red',
+            content: "" + index
+          });
+          for(var i = wsRegions.getRegions().length - 1; i >= index; i--){
+            [wsRegions.getRegions()[i], wsRegions.getRegions()[i - 1]] = [wsRegions.getRegions()[i - 1], wsRegions.getRegions()[i]];
+          }
           compasses.splice(index - 1, 0, newTime);
           updateArray();
         }
       }
+
+      function findIndex(e){
+        for(var i = 0; i < wsRegions.getRegions().length; i++){
+            if(wsRegions.getRegions()[i].id === e.id){
+              return i;
+            }
+          }
+      };
 
       var waveSurfer = WaveSurfer.create({
         container: "#audiowave",
@@ -431,6 +453,11 @@
 
       waveSurfer.setMuted(true);
       const wsRegions = waveSurfer.registerPlugin(WaveSurfer.Regions.create());
+      wsRegions.on("region-updated", (e) => {
+        console.log(e);
+        compasses[findIndex(e)] = e.start * 1000;
+        updateArray();
+      });
 
       let myVideo = document.getElementById("theVideo");
 
@@ -528,7 +555,6 @@
       api.playedBeatChanged.on((args) => {
         if(nextBeatWillChangeTheMasterBar && compasses.length > api._currentBeat.currentBeatLookup.masterBar.masterBar.index){
           api.timePosition += calculateMissedTime();
-          console.log("changed the time by: " + calculateMissedTime());
         }
         if(api._currentBeat.currentBeatLookup.masterBar.masterBar.index !== api._currentBeat.nextBeatLookup.masterBar.masterBar.index){
           nextBeatWillChangeTheMasterBar = true;
@@ -537,7 +563,6 @@
           nextBeatWillChangeTheMasterBar = false;
         }
         api.playbackSpeed = findPlaybackSpeed(myVideo, compasses, expectedDuration) * pbsSpeed;
-        console.log(api.playbackSpeed);
       });
 
       function calculateMissedTime(){
