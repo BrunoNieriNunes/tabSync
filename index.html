@@ -464,34 +464,15 @@
       
       myVideo.addEventListener("seeked", () => {
         api.playbackSpeed = 1;
-        var i = 0;
-        var found = false;
-        while(!found && i < compasses.length){
-          if(compasses[i] >= myVideo.currentTime * 1000){
-            found = true;
-            break;
-          }
-          i++;
+        var i = findVideoStamp();
+
+        api.timePosition = expectedStamps[i];
+
+        if(i <= compasses.length){
+          api.timePosition += (myVideo.currentTime * 1000 - (compasses[i]));
         }
-        if(found){
-          console.log("index: " + i);
-          api.tickPosition = tickStamps[i - 1] | 0;
-          api.timePosition = expectedStamps[i - 1] | 0;
-          console.log("tickposition: " + (tickStamps[i - 1] | 0));
-          if(i !== 0){
-            api.timePosition += (myVideo.currentTime * 1000 - (compasses[i - 1] | 0));
-            console.log("timeadded: " + (myVideo.currentTime * 1000 - (compasses[i - 1] | 0)));
-          }
-        }
-        while(!found && i < expectedStamps.length){
-          console.log("Atumalaca");
-          if(expectedStamps[i] >= myVideo.currentTime * 1000){
-            found = true;
-            api.tickPosition = tickStamps[i - 1] | 0;
-            api.timePosition += (myVideo.currentTime * 1000 - (expectedStamps[i]));
-            break;
-          }
-          i++;
+        else{
+          api.timePosition += (myVideo.currentTime * 1000 - (expectedStamps[i]));
         }
         rememberTime = api.tickPosition;
       });
