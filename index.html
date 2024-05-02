@@ -377,6 +377,12 @@
     <script type="text/javascript">
 
       document.getElementById("input").addEventListener("change", (e) => {
+        wsRegions.clearRegions();
+        while(compasses.length > 0)
+          compasses.pop();
+        var list = document.getElementById("myList");
+        while(list.hasChildNodes())
+          list.removeChild(list.children[0]);
         var media = URL.createObjectURL(e.target.files[0]);
         var video = document.getElementById("theVideo");
         video.src = media;
@@ -384,7 +390,14 @@
         waveSurfer.load(media);
       });
 
+      document.addEventListener('keypress', (e) => {
+        if(e.keyCode == 116){
+          addTime();
+        }
+      });
+
       function updateRegions(){
+        wsRegions.getRegions().sort(sortFunction);
         for(var i = 0; i < wsRegions.getRegions().length; i++){
             wsRegions.getRegions()[i].setOptions({content: "" + (findIndex(wsRegions.getRegions()[i]) + 1)});
           }
@@ -400,6 +413,7 @@
 
       function addTime(){
         compasses.push(myVideo.currentTime * 1000);
+        compasses.sort();
         wsRegions.addRegion({
           start: myVideo.currentTime,
           color: 'red',
@@ -468,7 +482,6 @@
       waveSurfer.setMuted(true);
       const wsRegions = waveSurfer.registerPlugin(WaveSurfer.Regions.create());
       wsRegions.on("region-updated", (e) => {
-        console.log(e);
         compasses[findIndex(e)] = e.start * 1000;
         wsRegions.getRegions().sort(sortFunction);
         updateAll();
@@ -485,11 +498,8 @@
       var rememberTime = 0;
 
       myVideo.addEventListener("play", () => {
-        api.tickPosition = rememberTime;
-        api.updateCursors();
-        api.cursorUpdateTick();
-        api.updateSelectionCursor();
-        api.playbackSpeed = findPlaybackSpeed(myVideo, compasses, expectedDuration) * pbsSpeed;
+        //api.tickPosition = rememberTime;
+        api.playbackSpeed = findPlaybackSpeed();
         theInterval = setInterval(() => {
           if(!pauseStamps.includes(findVideoStamp())){
             api.play();
@@ -499,7 +509,7 @@
 
       myVideo.addEventListener("pause", () => {
         clearInterval(theInterval);
-        rememberTime = api.tickPosition;
+        //rememberTime = api.tickPosition;
         api.pause();
       });
 
@@ -516,20 +526,17 @@
         else{
           api.timePosition += (myVideo.currentTime * 1000 - (expectedStamps[i]));
         }
-        rememberTime = api.tickPosition;
+        //rememberTime = api.tickPosition;
       });
 
-      function findPlaybackSpeed(videoFile, arrayVideo, arrayTab){
-        for(var i = 0; i < arrayTab.length; i++){
-          if(arrayVideo.length >= i){
-            if(arrayVideo[i] >= videoFile.currentTime * 1000){
-              if(i === 0)
-                return 1;
-              return (arrayTab[i - 1] / getInterval(arrayVideo, i));
-            }
-          }
+      function findPlaybackSpeed(){
+        var i = findVideoStamp();
+        if(i < compasses.length && i > 0){
+          return (expectedDuration[i - 1] / (compasses[i] - compasses[i - 1])) * pbsSpeed;
         }
-        return 1;
+        else{
+          return pbsSpeed;
+        }
       }
 
       function findVideoStamp(){
@@ -569,7 +576,7 @@
 
       api.playedBeatChanged.on((args) => {
         if(nextBeatWillChangeTheMasterBar && compasses.length > api._currentBeat.currentBeatLookup.masterBar.masterBar.index){
-          api.timePosition += calculateMissedTime();
+          api.timePosition += calculateMissedTime() / api.playbackSpeed;
         }
         if(api._currentBeat.currentBeatLookup.masterBar.masterBar.index !== api._currentBeat.nextBeatLookup.masterBar.masterBar.index){
           nextBeatWillChangeTheMasterBar = true;
@@ -577,7 +584,7 @@
         else{
           nextBeatWillChangeTheMasterBar = false;
         }
-        api.playbackSpeed = findPlaybackSpeed(myVideo, compasses, expectedDuration) * pbsSpeed;
+        api.playbackSpeed = findPlaybackSpeed();
       });
 
       function calculateMissedTime(){
