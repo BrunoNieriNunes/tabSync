@@ -302,7 +302,14 @@
       <button onclick="togglePause()" type="button">Alternar compasso de pausa</button>
       <input id="indexCmp" type="number" placeholder="Índice">
       <input id="timeCmp" type="number" placeholder="Valor">
+    </div>
+
+    <div>
       <ol id="myList"></ol>
+    </div>
+
+    <div>
+      <ul id="highlights"></ul>
     </div>
 
     <div class="at-wrap">
@@ -544,16 +551,33 @@
     }
 
     function togglePause(){
-      var list = document.getElementById("myList");
+      var hl = document.getElementById("highlights");
       var index = parseInt(document.getElementById("indexCmp").value);
       if(index > expectedStamps.lenght)
         return;
-      if(!pauseStamps.includes(index))
+      if(!pauseStamps.includes(index)){
         pauseStamps.push(index);
+      }
       else{
         pauseStamps.splice(pauseStamps.indexOf(index), 1);
       }
+      while (hl.hasChildNodes())
+        hl.removeChild(hl.children[0]);
+      for (var i = 0; i < pauseStamps.length; ++i) {
+        let li = document.createElement('li');
+        li.innerText = pauseStamps[i];
+        hl.appendChild(li);
+      }
     }
+
+    /*
+    while (list.hasChildNodes())
+        list.removeChild(list.children[0]);
+      for (var i = 0; i < compasses.length; ++i) {
+        let li = document.createElement('li');
+        li.innerText = compasses[i];
+        list.appendChild(li);
+    */
 
     function findIndex(e) {
       for (var i = 0; i < wsRegions.getRegions().length; i++) {
