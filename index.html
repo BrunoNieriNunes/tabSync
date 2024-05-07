@@ -5,6 +5,7 @@
   <meta charset="utf-8" />
   <title>Site Foda</title>
   <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mux/videojs-kit@latest/dist/index.css">
   <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@latest/dist/alphaTab.js"></script>
   <script src="https://unpkg.com/wavesurfer.js"></script>
   <script src="https://kit.fontawesome.com/4a47e623a7.js" crossorigin="anonymous"></script>
@@ -13,6 +14,7 @@
   <script src="https://unpkg.com/@mux/videojs-kit@latest/dist/index.vhs.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mux/mux-player"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mux/mux-uploader@1.0.0-beta.6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mux/videojs-kit@latest/dist/index.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style type="text/css">
     body {
@@ -275,8 +277,20 @@
     </div>
 
     <div>
-      <video src="Your Love.M4V" id="theVideo" width="720" controls>
+      <video id="theVideo" class="video-js vjs-16-9" controls preload="auto" width="100%" data-setup='{
+        "timelineHoverPreviews": true,
+        "plugins": {
+          "mux": {
+            "debug": false,
+            "data":{
+              "env_key": "ktpnj5dekn32bg6df7uno6pn2",
+              "video_title": "Example Title"
+            }
+          }
+        }
+      }'>
       </video>
+      <source src="xukFJeoCIvd2vZKeRO01de8y01V01quyERmYq37RGyq5Jo" type="video/mux" />
     </div>
 
     <div class="audio-wrap">
@@ -388,6 +402,7 @@
 
     async function showAll(){
       const res = await sb.from("tabs").select('*');
+      console.log(res);
     }
 
     async function importTab(){
@@ -539,7 +554,7 @@
       waveSurfer.play();
       theInterval = setInterval(() => {
         let val = findVideoStamp();
-        if(previousStamp !== val && api.playbackRange === null){
+        if(previousStamp !== val && api.playbackRange === null && !seekedByTab){
           console.log("seeking to: " + previousStamp);
           api.tickPosition = tickStamps[previousStamp];
           val = findVideoStamp();
@@ -720,6 +735,8 @@
     var expectedStamps;
     var tickStamps;
 
+    let myVideoJS = videojs('theVideo');
+
     updateArray();
 
     function updateCompasses() {
@@ -782,6 +799,7 @@
         myVideo.currentTime = expectedStamps[i] / 1000;
         myVideo.currentTime += percent * expectedDuration[i] / 1000;
       }
+      previousStamp = i;
       //rememberTime = api.tickPosition;
     }
 
