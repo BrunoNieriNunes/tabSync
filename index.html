@@ -604,7 +604,6 @@
         let val = findVideoStamp();
         if(previousStamp !== val){
           api.tickPosition = tickStamps[previousStamp];
-          console.log(previousStamp + " " + val);
         }
         if (!pauseStamps.includes(val)){
           api.play();
